@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>達摩塔 (Daruma Tower) - V3.2 測試展示版 (全層解鎖)</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #1e1e24; color: #fff; display: flex; justify-content: center; padding: 20px; }
+        .game-container { display: flex; gap: 40px; max-width: 1000px; width: 100%; height: 850px; }
+        .left-panel { flex: 1.2; display: flex; flex-direction: column; align-items: center; background: #2b2b36; padding: 20px; border-radius: 12px; position: relative; }
+        .right-panel { flex: 0.8; background: #2b2b36; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; height: 100%; }
+        
+        .energy-section { width: 100%; margin-top: 15px; }
+        .energy-bar-bg { width: 100%; height: 12px; background: #1a1a20; border-radius: 6px; overflow: hidden; border: 1px solid #444; }
+        .energy-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff9f43, #ff6b6b); transition: width 0.3s; }
+        .energy-text { font-size: 12px; color: #ffa502; margin-bottom: 5px; display: flex; justify-content: space-between; }
+        .energy-buff-active { color: #00f2fe; text-shadow: 0 0 5px #00f2fe; animation: blink 1s infinite; }
+
+        .tower { display: flex; flex-direction: column; align-items: center; margin-top: auto; margin-bottom: 20px; width: 100%; }
+        .block { width: 180px; height: 45px; margin-bottom: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2); transition: all 0.2s; position: relative; font-size: 14px; }
+        .block.target { border: 3px solid #00f2fe; box-shadow: 0 0 15px #00f2fe; z-index: 2; transform: scale(1.05); }
+        .daruma { width: 80px; height: 80px; background: #e74c3c; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; margin-bottom: 5px; transition: transform 0.3s; z-index: 5; }
+        
+        .bg-brown { background: #a1887f; } .bg-blue { background: #4fc3f7; } .bg-red { background: #e57373; } .bg-silver { background: #e0e0e0; } .bg-gold { background: #ffd54f; }
+
+        .ui-stats div { margin-bottom: 8px; display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding-bottom: 5px; width: 300px;}
+        .highlight { color: #ffd54f; font-weight: bold; font-size: 24px; }
+        
+        .controls { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
+        button { flex: 1 1 45%; padding: 15px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s;}
+        button:disabled { opacity: 0.3; cursor: not-allowed; }
+        .btn-hit { background: #ff4757; color: white; }
+        .btn-cashout { background: #2ed573; color: white; }
+        .btn-refresh { background: #ff9f43; color: white; width: 100%; margin-bottom: 10px; }
+        .btn-test { background: #9b59b6; color: white; width: 100%; margin-top: 5px; border: 2px dashed #e056fd; }
+        .btn-test:hover:not(:disabled) { background: #8e44ad; }
+        
+        .log-container { flex: 1; background: #1a1a20; padding: 15px; border-radius: 8px; overflow-y: auto; font-family: monospace; font-size: 13px; color: #a4b0be; }
+        .log-container::-webkit-scrollbar { width: 8px; }
+        .log-container::-webkit-scrollbar-track { background: #1a1a20; }
+        .log-container::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+        .log-special { color: #00f2fe; font-weight: bold; background: rgba(0,242,254,0.1); padding: 5px; border-radius: 4px; border: 1px solid #00f2fe; margin: 5px 0; }
+
+        @keyframes shake { 0% {transform: translate(1px, 1px) rotate(0deg);} 50% {transform: translate(-2px, 2px) rotate(-1deg);} 100% {transform: translate(1px, -1px) rotate(0deg);} }
+        .shaking { animation: shake 0.2s infinite; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <div class="left-panel">
+        <div class="ui-stats">
+            <div><span>餘額 (Balance):</span> <span id="balanceDisplay">$100.00</span></div>
+            <div><span>目前累計 (Total):</span> <span id="accumulatedDisplay" class="highlight">$0.00</span></div>
+        </div>
+
+        <div class="energy-section">
+            <div class="energy-text">
+                <span>能量點數 (Pity Points): <b id="energyCount">0</b> / 50</span>
+                <span id="energyBuffStatus" style="display:none;" class="energy-buff-active">✦ 成功率 +50% 啟動中 ✦</span>
+            </div>
+            <div class="energy-bar-bg">
+                <div id="energyBarFill" class="energy-bar-fill"></div>
+            </div>
+        </div>
+        
+        <div class="tower" id="towerContainer"></div>
+
+        <div class="controls">
+            <button id="btnRefresh" class="btn-refresh" onclick="refreshTower()">🔄 刷新塔 (Free)</button>
+            <button id="btnCashout" class="btn-cashout" onclick="cashOut()" disabled>安全下莊</button>
+            <button id="btnHit" class="btn-hit" onclick="hit()" disabled>敲擊 Hit ($1)</button>
+            <button id="btnTestClear" class="btn-test" onclick="forceFullClear()" disabled>🧪 測試：強制觸發全清</button>
+            <button id="btnNewGame" class="btn-new" onclick="startNewGame()" style="display:none; width: 100%; background: #3742fa; color: white; padding: 15px; border-radius: 8px; margin-top: 10px;">新的一局</button>
+        </div>
+    </div>
+
+    <div class="right-panel">
+        <h3 style="margin-top:0;">數值日誌</h3>
+        <div class="log-container" id="logContainer"></div>
+    </div>
+</div>
+
+<script>
+    const RTP_TARGET = 0.97;
+    const BET_COST = 1.0;
+    const FULL_CLEAR_PROB = 0.02;
+
+    const COLORS = {
+        brown: { name: '咖啡色', class: 'bg-brown', min: 1.0, max: 3.0 },
+        blue:  { name: '藍色',   class: 'bg-blue',  min: 3.0, max: 5.0 },
+        red:   { name: '紅色',   class: 'bg-red',   min: 5.0, max: 8.0 },
+        silver:{ name: '銀色',   class: 'bg-silver',min: 8.0, max: 12.0 },
+        gold:  { name: '金色',   class: 'bg-gold',  min: 12.0, max: 30.0 }
+    };
+
+    const CRASH_RATES = [0.05, 0.10, 0.15, 0.20, 0.25];
+
+    let balance = 100.0;
+    let energyPoints = 0; 
+    let accumulated = 0.0;
+    let currentLayerIndex = 0;
+    let towerBlocks = [];
+    let isGameOver = true;
+    let isProcessing = false;
+    let isSuspense = false;
+
+    function log(msg) {
+        const logCont = document.getElementById('logContainer');
+        logCont.innerHTML += `<div style="margin-bottom:5px; border-bottom:1px solid #333; padding:2px;">${msg}</div>`;
+        logCont.scrollTop = logCont.scrollHeight;
+    }
+
+    function generateTowerData() {
+        const weights = [
+            { brown: 50, blue: 20, red: 20, silver: 10, gold: 0 },
+            { brown: 10, blue: 30, red: 30, silver: 10, gold: 10 },
+            { brown: 5,  blue: 15, red: 20, silver: 30, gold: 30 },
+            { brown: 20, blue: 20, red: 20, silver: 20, gold: 20 },
+            { brown: 30, blue: 30, red: 20, silver: 15, gold: 5 }
+        ];
+
+        towerBlocks = [];
+        for (let i = 0; i < 5; i++) {
+            let totalW = 0;
+            for(let k in weights[i]) totalW += weights[i][k];
+            let rand = Math.random() * totalW;
+            let colorKey = 'brown';
+            for(let k in weights[i]) {
+                if(rand < weights[i][k]) { colorKey = k; break; }
+                rand -= weights[i][k];
+            }
+            let data = COLORS[colorKey];
+            let m = Math.floor((Math.random() * (data.max - data.min) + data.min) * 100) / 100;
+            towerBlocks.push({ layer: i + 1, colorKey, name: data.name, cssClass: data.class, min: data.min, max: data.max, multiplier: m });
+        }
+    }
+
+    function startNewGame() {
+        accumulated = 0.0;
+        currentLayerIndex = 0;
+        isGameOver = false;
+        isProcessing = false;
+        generateTowerData();
+        log("<br/><b>--- 新局開始 ---</b>");
+        updateUI();
+    }
+
+    function refreshTower() {
+        if (currentLayerIndex > 0 || accumulated > 0) return;
+        generateTowerData();
+        log("<i>🔄 刷新塔配置...</i>");
+        updateUI();
+    }
+
+    async function hit() {
+        if (isGameOver || isProcessing || balance < BET_COST) return;
+        isProcessing = true;
+        updateUI();
+
+        balance -= BET_COST;
+        let block = towerBlocks[currentLayerIndex];
+        let crashProb = CRASH_RATES[currentLayerIndex];
+        
+        let denominator = block.multiplier - 0.2 * crashProb * (accumulated + block.multiplier);
+        let successProb = denominator > 0 ? (RTP_TARGET / denominator) : 0.99;
+        
+        if (energyPoints >= 50) {
+            successProb += 0.50; 
+            log(`<span class="energy-buff-active">✦ 能量釋放：本次敲擊成功率提升 50%！</span>`);
+            energyPoints = 0; 
+        }
+
+        successProb = Math.max(0.01, Math.min(successProb, 0.99));
+        let rollSuccess = Math.random();
+
+        log(`[敲擊 L${block.layer}] 區間: ${block.name} | 成功率: ${(successProb*100).toFixed(1)}%`);
+
+        if (rollSuccess <= successProb) {
+            accumulated += block.multiplier;
+            isSuspense = true;
+            updateUI();
+            
+            log(`<span style="color:#ffd54f;">✨ 成功揭曉倍率: +${block.multiplier.toFixed(2)}x</span>`);
+            document.getElementById('towerContainer').classList.add('shaking');
+            await new Promise(r => setTimeout(r, 1000));
+            document.getElementById('towerContainer').classList.remove('shaking');
+            isSuspense = false;
+
+            if (Math.random() < FULL_CLEAR_PROB && currentLayerIndex < 4) {
+                triggerFullClear();
+                return;
+            }
+
+            if (Math.random() <= crashProb) {
+                let p = accumulated * 0.8;
+                balance += p;
+                log(`<span class="log-fail">💥 判定：失敗崩塌！(拿回 $${p.toFixed(2)})</span>`);
+                endGame();
+            } else {
+                currentLayerIndex++;
+                if (currentLayerIndex >= 5) {
+                    let d = accumulated * 2;
+                    balance += d;
+                    log(`<span class="log-warn">🎉 通關成功！獲得 Double Bonus: $${d.toFixed(2)}</span>`);
+                    endGame();
+                } else {
+                    log(`<span class="log-success">🛡️ 判定：安全！目前累計 $${accumulated.toFixed(2)}</span>`);
+                }
+            }
+        } else {
+            energyPoints = Math.min(50, energyPoints + 1);
+            log(`<span style="color:#aaa;">💨 毫無反應... (能量 +1，目前: ${energyPoints})</span>`);
+        }
+
+        isProcessing = false;
+        updateUI();
+    }
+
+    // 獨立出來的全清邏輯
+    function triggerFullClear() {
+        log(`<div class="log-special">🔥 特殊觸發：全清 BONUS！🔥</div>`);
+        for (let j = currentLayerIndex + 1; j < 5; j++) {
+            let b = towerBlocks[j];
+            accumulated += b.multiplier;
+            log(`-> 自動敲落 L${b.layer}: ${b.name} (+${b.multiplier.toFixed(2)}x)`);
+        }
+        let totalWithDouble = accumulated * 2;
+        balance += totalWithDouble;
+        log(`<span class="log-warn">🎉 全清獎勵完成！最終獎金 x2 = $${totalWithDouble.toFixed(2)}</span>`);
+        endGame();
+    }
+
+    // 測試專用：強制觸發全清按鈕邏輯
+    async function forceFullClear() {
+        // 修改點：移除了 currentLayerIndex >= 4 的限制條件
+        if (isGameOver || isProcessing || balance < BET_COST) return;
+        isProcessing = true;
+        updateUI();
+
+        balance -= BET_COST;
+        let block = towerBlocks[currentLayerIndex];
+        
+        log(`[🧪 測試模式] 強制敲擊 L${block.layer} 並保證觸發全清！`);
+
+        accumulated += block.multiplier;
+        isSuspense = true;
+        updateUI();
+        
+        log(`<span style="color:#ffd54f;">✨ 成功揭曉倍率: +${block.multiplier.toFixed(2)}x</span>`);
+        document.getElementById('towerContainer').classList.add('shaking');
+        await new Promise(r => setTimeout(r, 1000));
+        document.getElementById('towerContainer').classList.remove('shaking');
+        isSuspense = false;
+
+        triggerFullClear();
+    }
+
+    function cashOut() {
+        balance += accumulated;
+        log(`<span class="log-success">💰 安全下莊！拿走 $${accumulated.toFixed(2)}</span>`);
+        endGame();
+    }
+
+    function endGame() {
+        isGameOver = true;
+        isProcessing = false;
+        updateUI();
+    }
+
+    function updateUI() {
+        document.getElementById('balanceDisplay').innerText = `$${balance.toFixed(2)}`;
+        document.getElementById('accumulatedDisplay').innerText = `$${accumulated.toFixed(2)}`;
+        document.getElementById('energyCount').innerText = energyPoints;
+        document.getElementById('energyBarFill').style.width = (energyPoints / 50 * 100) + '%';
+        document.getElementById('energyBuffStatus').style.display = (energyPoints >= 50) ? 'block' : 'none';
+        
+        const bH = document.getElementById('btnHit');
+        const bC = document.getElementById('btnCashout');
+        const bR = document.getElementById('btnRefresh');
+        const bN = document.getElementById('btnNewGame');
+        const bTest = document.getElementById('btnTestClear');
+
+        if (isGameOver) {
+            bH.disabled = bC.disabled = bR.disabled = bTest.disabled = true;
+            bN.style.display = 'block'; bR.style.display = 'none'; bTest.style.display = 'none';
+        } else {
+            bN.style.display = 'none'; bR.style.display = 'block'; bTest.style.display = 'block';
+            bH.disabled = isProcessing;
+            bC.disabled = isProcessing || accumulated <= 0;
+            bR.disabled = isProcessing || currentLayerIndex > 0;
+            // 修改點：移除了 currentLayerIndex >= 4 的按鈕反灰限制
+            bTest.disabled = isProcessing; 
+        }
+        renderTower();
+    }
+
+    function renderTower() {
+        const container = document.getElementById('towerContainer');
+        container.innerHTML = '';
+        let dStyle = (isGameOver && currentLayerIndex < 5 && accumulated > 0) ? 'transform:rotate(30deg) translate(10px,10px);opacity:0.5;' : '';
+        if(isGameOver && currentLayerIndex >= 5) dStyle = 'transform:scale(1.2);box-shadow:0 0 20px #ffd54f;';
+        container.innerHTML += `<div class="daruma" style="${dStyle}">福</div>`;
+        for (let i = 4; i >= currentLayerIndex; i--) {
+            if (i === currentLayerIndex && isSuspense) continue;
+            let b = towerBlocks[i];
+            let target = (i === currentLayerIndex && !isGameOver && !isSuspense) ? 'target' : '';
+            container.innerHTML += `<div class="block ${b.cssClass} ${target}">L${b.layer} | ${b.min}x ~ ${b.max}x</div>`;
+        }
+    }
+
+    startNewGame();
+</script>
+</body>
+</html>
