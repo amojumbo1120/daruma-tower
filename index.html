@@ -179,27 +179,36 @@
         log(`[敲擊 L${block.layer}] 區間: ${block.name} | 成功率: ${(successProb*100).toFixed(1)}%`);
 
         if (rollSuccess <= successProb) {
-            accumulated += block.multiplier;
+            // 🌟 修正點：使用 pendingWin 暫存，絕對不先加進 accumulated
+            let pendingWin = block.multiplier;
             isSuspense = true;
-            updateUI();
+            updateUI(); // 此時畫面上的 Total 不會增加
             
-            log(`<span style="color:#ffd54f;">✨ 成功揭曉倍率: +${block.multiplier.toFixed(2)}x</span>`);
+            log(`<span style="color:#ffd54f;">✨ 成功揭曉倍率: +${pendingWin.toFixed(2)}x</span>`);
+            log(`<span style="color:#aaa;">⏳ 判定中... (塔身晃動)</span>`);
+            
             document.getElementById('towerContainer').classList.add('shaking');
             await new Promise(r => setTimeout(r, 1000));
             document.getElementById('towerContainer').classList.remove('shaking');
             isSuspense = false;
 
             if (Math.random() < FULL_CLEAR_PROB && currentLayerIndex < 4) {
+                accumulated += pendingWin; // 觸發大獎，正式入帳
                 triggerFullClear();
                 return;
             }
 
             if (Math.random() <= crashProb) {
-                let p = accumulated * 0.8;
-                balance += p;
+                // 失敗崩塌結算
+                let totalWithPending = accumulated + pendingWin;
+                let p = totalWithPending * 0.8;
+                balance += p; // 失敗保護金正式進入餘額
+                accumulated = totalWithPending; // 畫面更新為最終結果，讓玩家知道 80% 是怎麼算出來的
                 log(`<span class="log-fail">💥 判定：失敗崩塌！(拿回 $${p.toFixed(2)})</span>`);
                 endGame();
             } else {
+                // 安全結算
+                accumulated += pendingWin; // 🌟 確定安全後，才正式跳動 Total 數字！
                 currentLayerIndex++;
                 if (currentLayerIndex >= 5) {
                     let d = accumulated * 2;
@@ -218,7 +227,6 @@
         isProcessing = false;
         updateUI();
     }
-
     // 獨立出來的全清邏輯
     function triggerFullClear() {
         log(`<div class="log-special">🔥 特殊觸發：全清 BONUS！🔥</div>`);
@@ -235,7 +243,6 @@
 
     // 測試專用：強制觸發全清按鈕邏輯
     async function forceFullClear() {
-        // 修改點：移除了 currentLayerIndex >= 4 的限制條件
         if (isGameOver || isProcessing || balance < BET_COST) return;
         isProcessing = true;
         updateUI();
@@ -245,19 +252,22 @@
         
         log(`[🧪 測試模式] 強制敲擊 L${block.layer} 並保證觸發全清！`);
 
-        accumulated += block.multiplier;
+        // 🌟 修正點：使用 pendingWin 暫存
+        let pendingWin = block.multiplier;
         isSuspense = true;
         updateUI();
         
-        log(`<span style="color:#ffd54f;">✨ 成功揭曉倍率: +${block.multiplier.toFixed(2)}x</span>`);
+        log(`<span style="color:#ffd54f;">✨ 成功揭曉倍率: +${pendingWin.toFixed(2)}x</span>`);
+        log(`<span style="color:#aaa;">⏳ 判定中... (塔身晃動)</span>`);
+        
         document.getElementById('towerContainer').classList.add('shaking');
         await new Promise(r => setTimeout(r, 1000));
         document.getElementById('towerContainer').classList.remove('shaking');
         isSuspense = false;
 
+        accumulated += pendingWin; // 確定觸發後才入帳
         triggerFullClear();
     }
-
     function cashOut() {
         balance += accumulated;
         log(`<span class="log-success">💰 安全下莊！拿走 $${accumulated.toFixed(2)}</span>`);
