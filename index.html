@@ -4,90 +4,319 @@
     <meta name="robots" content="noindex, nofollow">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>達摩塔 (Daruma Tower) - V3.2 測試展示版 (全層解鎖)</title>
+    <title>達摩塔 (Daruma Tower) - V3.16 ALL CLEAR 連擊演出版</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background-color: #1e1e24; color: #fff; display: flex; justify-content: center; padding: 20px; }
-        .game-container { display: flex; gap: 40px; max-width: 1000px; width: 100%; height: 850px; }
-        .left-panel { flex: 1.2; display: flex; flex-direction: column; align-items: center; background: #2b2b36; padding: 20px; border-radius: 12px; position: relative; }
-        .right-panel { flex: 0.8; background: #2b2b36; padding: 20px; border-radius: 12px; display: flex; flex-direction: column; height: 100%; }
+        /* 重置基礎樣式 */
+        body { 
+            font-family: 'Segoe UI', sans-serif; background-color: #000; margin: 0; 
+            display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;
+        }
         
-        .energy-section { width: 100%; margin-top: 15px; }
-        .energy-bar-bg { width: 100%; height: 12px; background: #1a1a20; border-radius: 6px; overflow: hidden; border: 1px solid #444; }
-        .energy-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #ff9f43, #ff6b6b); transition: width 0.3s; }
-        .energy-text { font-size: 12px; color: #ffa502; margin-bottom: 5px; display: flex; justify-content: space-between; }
-        .energy-buff-active { color: #00f2fe; text-shadow: 0 0 5px #00f2fe; animation: blink 1s infinite; }
+        /* === 遊戲外框 === */
+        .game-app {
+            position: relative; width: 100vw; height: 100vh;
+            max-width: calc(100vh * (1050 / 1680)); max-height: calc(100vw * (1680 / 1050));
+            background: #1e1e24; display: flex; flex-direction: column; overflow: hidden;
+            box-shadow: 0 0 30px rgba(255,255,255,0.1);
+        }
 
-        .tower { display: flex; flex-direction: column; align-items: center; margin-top: auto; margin-bottom: 20px; width: 100%; }
-        .block { width: 180px; height: 45px; margin-bottom: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; color: #000; box-shadow: inset 0 -4px 0 rgba(0,0,0,0.2); transition: all 0.2s; position: relative; font-size: 14px; }
-        .block.target { border: 3px solid #00f2fe; box-shadow: 0 0 15px #00f2fe; z-index: 2; transform: scale(1.05); }
-        .daruma { width: 80px; height: 80px; background: #e74c3c; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; margin-bottom: 5px; transition: transform 0.3s; z-index: 5; }
-        
-        .bg-brown { background: #a1887f; } .bg-blue { background: #4fc3f7; } .bg-red { background: #e57373; } .bg-silver { background: #e0e0e0; } .bg-gold { background: #ffd54f; }
+        /* === 🌟 測試用功能面板 (左上角) === */
+        .dev-panel {
+            position: absolute; top: 70px; left: 10px; z-index: 999;
+            display: flex; flex-direction: column; gap: 8px;
+        }
+        .btn-dev {
+            background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #fff; 
+            padding: 5px 10px; border-radius: 5px; font-size: 10px; cursor: pointer;
+            font-weight: bold; transition: 0.2s;
+        }
+        .btn-dev:hover { background: #fff; color: #000; }
 
-        .ui-stats div { margin-bottom: 8px; display: flex; justify-content: space-between; border-bottom: 1px solid #444; padding-bottom: 5px; width: 300px;}
-        .highlight { color: #ffd54f; font-weight: bold; font-size: 24px; }
-        
-        .controls { display: flex; flex-wrap: wrap; gap: 10px; width: 100%; }
-        button { flex: 1 1 45%; padding: 15px; font-size: 16px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s;}
-        button:disabled { opacity: 0.3; cursor: not-allowed; }
-        .btn-hit { background: #ff4757; color: white; }
-        .btn-cashout { background: #2ed573; color: white; }
-        .btn-refresh { background: #ff9f43; color: white; width: 100%; margin-bottom: 10px; }
-        .btn-test { background: #9b59b6; color: white; width: 100%; margin-top: 5px; border: 2px dashed #e056fd; }
-        .btn-test:hover:not(:disabled) { background: #8e44ad; }
-        
-        .log-container { flex: 1; background: #1a1a20; padding: 15px; border-radius: 8px; overflow-y: auto; font-family: monospace; font-size: 13px; color: #a4b0be; }
-        .log-container::-webkit-scrollbar { width: 8px; }
-        .log-container::-webkit-scrollbar-track { background: #1a1a20; }
-        .log-container::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
-        .log-special { color: #00f2fe; font-weight: bold; background: rgba(0,242,254,0.1); padding: 5px; border-radius: 4px; border: 1px solid #00f2fe; margin: 5px 0; }
+        /* === Header === */
+        .header { 
+            width: 100%; height: 60px; flex-shrink: 0; 
+            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 20px; box-sizing: border-box; z-index: 100; border-bottom: 2px solid #5d4037; 
+        }
+        .balance-section { color: #fff; font-size: 16px; font-weight: bold; }
+        .right-header-buttons { display: flex; align-items: center; gap: 10px;}
+        .settings-icon { font-size: 20px; opacity: 0.7; cursor: pointer; }
 
-        @keyframes shake { 0% {transform: translate(1px, 1px) rotate(0deg);} 50% {transform: translate(-2px, 2px) rotate(-1deg);} 100% {transform: translate(1px, -1px) rotate(0deg);} }
-        .shaking { animation: shake 0.2s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        /* === 遊戲內容區 === */
+        .game-content { 
+            flex: 1; position: relative; background-image: url('Background.png'); 
+            background-size: cover; background-position: center bottom; overflow: hidden;
+            display: flex; flex-direction: column; padding-bottom: 0px; 
+        }
+        
+        .point-counter { 
+            position: absolute; right: 20px; top: 50%; transform: translateY(-50%); 
+            display: flex; flex-direction: column; align-items: center; z-index: 10;
+        }
+        .point-text { background: rgba(0,0,0,0.7); color: #fff; padding: 5px 8px; border-radius: 5px; margin-bottom: 10px; font-size: 12px; white-space: nowrap;}
+        .point-bar-bg { width: 12px; height: 480px; background: #1a1a20; border-radius: 6px; border: 2px solid #444; overflow: hidden; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.8) inset;}
+        .point-bar-fill { width: 100%; height: 0%; background: linear-gradient(0deg, #ffd54f, #ff9f43); transition: height 0.3s; position: absolute; bottom: 0; }
+
+        .score-display { text-align: center; margin-top: 8%; margin-bottom: auto; z-index: 10; }
+        .score-bonus-medal { 
+            width: 210px; height: 45px; background: rgba(139,69,19,0.8); border-radius: 25px; 
+            display: inline-flex; align-items: center; justify-content: center; border: 2px solid #ffd54f; 
+            box-shadow: 0 0 10px rgba(255,213,79,0.5); margin-bottom: 45px; 
+        }
+        .score-bonus-medal img { height: 30px; margin-right: 8px; }
+        .score-bonus-medal span { color: #ffd54f; font-weight: bold; font-size: 15px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .score-label { background: #fff; color: #000; padding: 5px 15px; border-radius: 15px; font-weight: bold; font-size: 14px; display: inline-block; }
+        .score-value { color: #ffd54f; font-size: 38px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-top: 5px; display: inline-block; transition: color 0.3s, text-shadow 0.3s; }
+
+        .tower { display: flex; flex-direction: column; align-items: center; margin-top: auto; width: 100%; z-index: 5; position: relative;}
+        
+        .block { 
+            width: 200px; height: 60px; margin-bottom: 0px; border-radius: 10px; display: flex; align-items: center; justify-content: center; 
+            font-weight: bold; color: #000; position: relative; font-size: 14px; 
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8); background-size: 100% 100%; background-position: center; 
+            transition: transform 0.3s ease-out, opacity 0.3s ease-out, box-shadow 0.2s ease, outline 0.2s ease;
+            transform: scale(1) translateX(0) rotate(0deg); 
+        }
+        .block.target { outline: 4px solid #00f2fe; box-shadow: 0 0 20px #00f2fe; z-index: 2; transform: scale(1.05) translateX(0) rotate(0deg); }
+        .fly-out { transform: scale(1) translateX(-300px) rotate(-15deg) !important; opacity: 0 !important; }
+        
+        .daruma { 
+            width: 100px; height: 100px; background-image: url('Daruma.png'); background-size: contain; background-repeat: no-repeat; background-position: center bottom;
+            display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; margin-bottom: 0px; transition: transform 0.3s; z-index: 5; 
+        }
+        
+        .bg-brown { background-image: url('Tower-Brown.png'); } 
+        .bg-blue { background-image: url('Tower-Blue.png'); } 
+        .bg-red { background-image: url('Tower-Red.png'); } 
+        .bg-silver { background-image: url('Tower-Sliver.png'); } 
+        .bg-gold { background-image: url('Tower-Gold.png'); }
+
+        .mallet {
+            position: absolute; width: 140px; height: 140px; background-image: url('Mallet.png'); background-size: contain; background-repeat: no-repeat; background-position: center;
+            right: 15%; z-index: 20; transform: rotate(30deg); transform-origin: right bottom; 
+            transition: right 0.15s ease-in, transform 0.15s ease-in, opacity 0.3s; pointer-events: none; opacity: 1; bottom: 0px; 
+        }
+        .mallet.charged { animation: pulse-glow 1s infinite alternate; }
+        @keyframes pulse-glow { 0% { filter: drop-shadow(0 0 5px #ffd54f); } 100% { filter: drop-shadow(0 0 25px #ff9f43) drop-shadow(0 0 10px #ff4757); } }
+        .mallet.swing { right: 30%; transform: rotate(-15deg); }
+        .mallet.pull-back { right: 5%; transform: rotate(50deg) !important; transition: right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); }
+        .mallet.power-swing { right: 32%; transform: rotate(-20deg) !important; transition: right 0.1s ease-in, transform 0.1s ease-in; }
+        .mallet.hidden { opacity: 0; }
+
+        /* === 🌟 FEVER TIME 專屬 UI === */
+        .fever-ui { position: absolute; left: 20px; z-index: 100; display: flex; flex-direction: column; align-items: flex-start; top: 20%; transform: scale(1.5); transform-origin: top left; }
+        .fever-ui.hidden { display: none; }
+        .fever-ui-title { font-size: 22px; font-weight: 900; font-style: italic; background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff); background-size: 200% auto; -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 0 5px rgba(255,0,255,0.8)); animation: textShine 2s linear infinite; }
+        .fever-ui-sub { font-size: 14px; color: #ffd54f; font-weight: bold; text-shadow: 1px 1px 2px #000; margin-top: -2px; letter-spacing: 1px; }
+        .fever-ui-count { font-size: 14px; color: #fff; font-weight: bold; margin-top: 2px; text-shadow: 1px 1px 2px #000; }
+        .fever-count-num { color: #00f2fe; font-size: 18px; }
+
+        .fever-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 250; display: flex; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.3s; }
+        .fever-overlay.hidden { opacity: 0; pointer-events: none; }
+        .fever-center-text { font-size: 64px; font-weight: 900; font-style: italic; text-align: center; animation: popInFever 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; line-height: 1.1; }
+        .fever-style { background: linear-gradient(90deg, #ff0055, #ffdd00, #00ffaa, #00aaff, #ff00ff); background-size: 400% 400%; -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 0 15px #ff00ff) drop-shadow(0 0 30px #ff0055); animation: feverGlow 2s linear infinite; }
+        .fever-complete-style { color: #80d8ff; text-shadow: 0 0 20px #00b0ff, 0 0 40px #00b0ff, 0 0 60px #00b0ff; }
+
+        /* === 🌟 ALL CLEAR 專屬 UI === */
+        .all-clear-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); z-index: 250; display: flex; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.3s; }
+        .all-clear-overlay.hidden { opacity: 0; pointer-events: none; }
+        .all-clear-text { 
+            font-size: 72px; font-weight: 900; font-style: italic; text-align: center; 
+            color: #ffb300; 
+            text-shadow: 0 0 15px #ffea00, 0 0 30px #ff9800, 0 0 50px #ff5722, 4px 4px 0 #000;
+            animation: popInFever 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+        }
+
+        @keyframes textShine { to { background-position: 200% center; } }
+        @keyframes feverGlow { 0% { background-position: 0% 50%; filter: drop-shadow(0 0 15px #ff00ff) drop-shadow(0 0 30px #ff0055); } 50% { background-position: 100% 50%; filter: drop-shadow(0 0 15px #00ffff) drop-shadow(0 0 30px #00ffaa); } 100% { background-position: 0% 50%; filter: drop-shadow(0 0 15px #ff00ff) drop-shadow(0 0 30px #ff0055); } }
+        @keyframes popInFever { 0% { transform: scale(0.1) rotate(-10deg); opacity: 0; } 60% { transform: scale(1.2) rotate(5deg); opacity: 1; } 100% { transform: scale(1) rotate(0deg); opacity: 1; } }
+
+        /* === Footer === */
+        .footer { 
+            width: 100%; height: 160px; flex-shrink: 0; 
+            background-image: url('ButtomBackground.png'); background-color: #1a1a1a; 
+            background-size: cover; background-position: center top; 
+            display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 15px; box-sizing: border-box; z-index: 100; position: relative; border-top: none;
+        }
+        
+        .footer-left { display: flex; align-items: center; gap: 10px; z-index: 10;}
+        .footer-right { display: flex; align-items: center; gap: 10px; z-index: 10;}
+        .footer-center { position: absolute; left: 50%; transform: translate(-50%, -50%); top: 50%; display: flex; flex-direction: column; align-items: center; z-index: 110;}
+
+        .prediction { display: flex; flex-direction: column; align-items: center; border: 2px solid #ffd54f; border-radius: 10px; background: rgba(139,69,19,0.5); padding: 5px 8px; color: #fff; width: 75px; text-align: center;}
+        .prediction-label { font-size: 9px; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
+        .block-preview { width: 60px; height: 25px; border-radius: 5px; background-size: 100% 100%; border: 1px solid #444; }
+        .prediction-range { color: #00f2fe; font-size: 12px; font-weight: bold; margin-top: 3px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+
+        .btn-common { border-radius: 8px; font-weight: bold; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s, filter 0.2s;}
+        .btn-common:active:not(:disabled) { transform: scale(0.95); }
+        .btn-common:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(80%); }
+        
+        .btn-refresh-main { background: linear-gradient(180deg, #4fc3f7, #0277bd); width: 85px; height: 45px; font-size: 13px; border: 2px solid #0277bd; box-shadow: 0 0 10px rgba(79,195,247,0.5); }
+        .btn-auto-main { background: linear-gradient(180deg, #ff9f43, #e67e22); width: 85px; height: 45px; font-size: 14px; border: 2px solid #e67e22; box-shadow: 0 0 10px rgba(230,126,34,0.5); }
+        .btn-cashout-main { background: linear-gradient(180deg, #2ed573, #009900); width: 90px; height: 50px; font-size: 13px; border: 2px solid #009900; box-shadow: 0 0 10px rgba(46,213,115,0.5); }
+        .cashout-amount { color: #ffd54f; font-size: 11px; margin-top: 2px; }
+
+        .btn-hit-main { background: linear-gradient(180deg, #ff4757, #cc0000); color: white; width: 90px; height: 90px; border-radius: 50%; font-size: 22px; font-weight: bold; border: 4px solid #cc0000; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255,71,87,0.5); cursor: pointer; transition: transform 0.1s, box-shadow 0.2s, background 0.3s;}
+        .btn-hit-main:hover:not(:disabled) { box-shadow: 0 0 20px rgba(255,71,87,0.8); }
+        .btn-hit-main:active:not(:disabled) { transform: scale(0.95); }
+        .btn-hit-main:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(50%);}
+        .hit-icon { height: 30px; margin-top: 2px; }
+
+        #hitContent, #autoContent { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
+        
+        .auto-container { position: relative; }
+        .auto-menu { position: absolute; bottom: 55px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); border: 2px solid #ffd54f; border-radius: 10px; display: flex; flex-direction: column; width: 70px; box-shadow: 0 0 15px rgba(255,213,79,0.3); transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 120; transform-origin: bottom; }
+        .auto-menu.hidden { opacity: 0; pointer-events: none; transform: translateX(-50%) scaleY(0); }
+        .auto-menu div { padding: 12px 0; text-align: center; color: #fff; font-weight: bold; border-bottom: 1px solid #444; cursor: pointer; }
+        .auto-menu div:hover { background: #ffd54f; color: #000; }
+        .auto-menu div:last-child { border-bottom: none; }
+        
+        .bet-selector { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; color: #ffd54f; font-weight: bold;}
+        .bet-label { font-size: 15px; color: #ffd54f; margin-right: 2px;}
+        .bet-amount { font-size: 21px; }
+        .bet-btn { color: #2ed573; font-size: 30px; font-weight: bold; cursor: pointer; padding: 0 15px; }
+
+        /* === 重置遮罩 === */
+        .game-over-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85);
+            z-index: 300; display: flex; justify-content: center; align-items: center;
+            opacity: 1; transition: opacity 0.3s; cursor: pointer;
+        }
+        .game-over-overlay.hidden { opacity: 0; pointer-events: none; }
+        .pop-container { animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .breathe-container { display: flex; flex-direction: column; align-items: center; justify-content: center; animation: breathe 2s ease-in-out infinite; animation-delay: 0.6s; }
+        .win-title { font-size: 28px; color: #fff; margin-bottom: 10px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+        .win-score { font-size: 56px; font-weight: bold; color: #ffd54f; text-shadow: 0 0 30px rgba(255,213,79,1); }
+
+        /* 動畫區 */
+        @keyframes popIn { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+        @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+        @keyframes shake-tower { 0% {transform: translate(1px, 1px) rotate(0deg);} 50% {transform: translate(-2px, 2px) rotate(-1deg);} 100% {transform: translate(1px, -1px) rotate(0deg);} }
+        .shaking-tower { animation: shake-tower 0.2s infinite; }
+        @keyframes shake-block { 0% {transform: scale(1.05) translate(2px, 1px) rotate(0deg);} 25% {transform: scale(1.05) translate(-3px, 2px) rotate(-1deg);} 50% {transform: scale(1.05) translate(2px, -1px) rotate(1deg);} 75% {transform: scale(1.05) translate(-2px, 1px) rotate(0deg);} 100% {transform: scale(1.05) translate(0px, 0px) rotate(0deg);} }
+        .shaking-block { animation: shake-block 0.2s infinite !important; }
+
+        /* 全清特效 */
+        @keyframes daruma-dance { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-15deg); } 75% { transform: rotate(15deg); } }
+        .daruma-dancing { animation: daruma-dance 0.2s ease-in-out infinite; }
+        @keyframes daruma-grow { 0% { transform: scale(1); box-shadow: 0 0 0px rgba(255,213,79,0); } 100% { transform: scale(4); box-shadow: 0 0 50px rgba(255,213,79,0.8); } }
+        .daruma-giant { animation: daruma-grow 1s ease-in-out forwards !important; transform-origin: bottom center !important; z-index: 50 !important; border-radius: 50%; }
+        .x2-text { position: absolute; color: #fffb00; font-size: 72px; font-weight: bold; text-align: center; left: 50%; bottom: 120px; text-shadow: 0 0 10px #ffea00, 0 0 20px #ffea00, 0 0 40px #ff9800, 0 0 80px #ff5722, 3px 3px 0px #000; z-index: 60; pointer-events: none; opacity: 0; }
+        @keyframes x2-fly { 0% { transform: translateX(-50%) scale(0.5); opacity: 0; } 6.6% { transform: translateX(-50%) scale(1); opacity: 1; } 40% { transform: translateX(-50%) scale(1); opacity: 1; } 60% { transform: translateX(-50%) translateY(30px) scale(0.9); opacity: 1; filter: drop-shadow(0 0 20px #ff0000); } 100% { transform: translateX(-50%) translateY(-40vh) scale(0.5); opacity: 0; } }
+        .x2-flying { animation: x2-fly 1.5s ease-in-out forwards; }
+        @keyframes score-hit-anim { 0% { transform: scale(1); color: #ffd54f; } 40% { transform: scale(1.6) translateY(-15px); color: #fffb00; text-shadow: 0 0 30px #ffea00, 0 0 50px #ff5722; } 100% { transform: scale(1); color: #ffd54f; } }
+        .score-hitting { animation: score-hit-anim 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
     </style>
 </head>
-<body>
+<body onclick="hideAutoMenuOnBgClick(event)">
 
-<div class="game-container">
-    <div class="left-panel">
-        <div class="ui-stats">
-            <div><span>餘額 (Balance):</span> <span id="balanceDisplay">$100.00</span></div>
-            <div><span>目前累計 (Total):</span> <span id="accumulatedDisplay" class="highlight">$0.00</span></div>
+<div class="game-app">
+    
+    <div class="dev-panel">
+        <button class="btn-dev" style="border-color: #ff9800;" onclick="forceAllClear()">Force: ALL CLEAR</button>
+        <button class="btn-dev" style="border-color: #ff00ff;" onclick="forceFever()">Force: FEVER TIME</button>
+    </div>
+
+    <div class="header">
+        <div class="balance-section">PLAYER BALANCE: <span id="balanceDisplay">$10,250.00</span></div>
+        <div class="right-header-buttons"><span class="settings-icon">⚙️</span></div>
+    </div>
+
+    <div class="game-content">
+        <div id="feverUI" class="fever-ui hidden">
+            <div class="fever-ui-title">FEVER TIME</div>
+            <div class="fever-ui-sub">Double Chance</div>
+            <div class="fever-ui-count">FREE SPINS: <span id="feverCount" class="fever-count-num">30</span></div>
         </div>
 
-        <div class="energy-section">
-            <div class="energy-text">
-                <span>能量點數 (Pity Points): <b id="energyCount">0</b> / 50</span>
-                <span id="energyBuffStatus" style="display:none;" class="energy-buff-active">✦ 成功率 +50% 啟動中 ✦</span>
-            </div>
-            <div class="energy-bar-bg">
-                <div id="energyBarFill" class="energy-bar-fill"></div>
-            </div>
+        <div class="point-counter">
+            <span id="pointText" class="point-text">Point 10/50</span>
+            <div class="point-bar-bg"><div id="pointBarFill" class="point-bar-fill"></div></div>
         </div>
-        
+
+        <div class="score-display">
+            <div class="score-bonus-medal">
+                <img src="Daruma.png" alt="勳章達摩">
+                <span>Full Clear x2 Bonus</span>
+            </div><br>
+            <div id="scoreLabel" class="score-label">目前分數</div><br>
+            <div id="scoreValue" class="score-value">30.00x</div>
+        </div>
+
+        <div id="mallet" class="mallet"></div>
         <div class="tower" id="towerContainer"></div>
+        
+        <div id="allClearOverlay" class="all-clear-overlay hidden">
+            <div id="allClearText" class="all-clear-text">ALL CLEAR</div>
+        </div>
 
-        <div class="controls">
-            <button id="btnRefresh" class="btn-refresh" onclick="refreshTower()">🔄 刷新塔 (Free)</button>
-            <button id="btnCashout" class="btn-cashout" onclick="cashOut()" disabled>安全下莊</button>
-            <button id="btnHit" class="btn-hit" onclick="hit()" disabled>敲擊 Hit ($1)</button>
-            <button id="btnTestClear" class="btn-test" onclick="forceFullClear()" disabled>🧪 測試：強制觸發全清</button>
-            <button id="btnNewGame" class="btn-new" onclick="startNewGame()" style="display:none; width: 100%; background: #3742fa; color: white; padding: 15px; border-radius: 8px; margin-top: 10px;">新的一局</button>
+        <div id="feverOverlay" class="fever-overlay hidden">
+            <div id="feverCenterText" class="fever-center-text">FEVER TIME</div>
+        </div>
+
+        <div id="gameOverOverlay" class="game-over-overlay hidden" onclick="startNewGame()">
+            <div class="pop-container" id="gameOverPop">
+                <div class="breathe-container" id="gameOverBreathe"></div>
+            </div>
         </div>
     </div>
 
-    <div class="right-panel">
-        <h3 style="margin-top:0;">數值日誌</h3>
-        <div class="log-container" id="logContainer"></div>
+    <div class="footer">
+        <div class="footer-left">
+            <div class="prediction">
+                <span class="prediction-label">PREDICTION:</span>
+                <div id="blockPreview" class="block-preview bg-brown"></div>
+                <span id="predictionRange" class="prediction-range">5x-20x</span>
+            </div>
+            <button id="btnRefresh" class="btn-common btn-refresh-main" onclick="refreshTower()">REFRESH</button>
+        </div>
+
+        <div class="footer-center">
+            <button id="btnHit" class="btn-hit-main" onclick="handleHitClick()">
+                <div id="hitContent">
+                    <div>HIT</div>
+                    <img src="Mallet.png" alt="槌子圖標" class="hit-icon">
+                </div>
+                <div id="autoContent" style="display:none;">
+                    <div style="font-size: 14px; color: #ffcccb; letter-spacing: 1px;">AUTO</div>
+                    <div id="autoCountText" style="font-size: 26px; line-height: 1;">10</div>
+                </div>
+            </button>
+            <div class="bet-selector">
+                <span class="bet-label">BET</span>
+                <span class="bet-btn green">+</span>
+                <span id="betAmount" class="bet-amount">$10</span>
+                <span class="bet-btn red">-</span>
+            </div>
+        </div>
+
+        <div class="footer-right">
+            <div class="auto-container" id="autoContainer">
+                <div class="auto-menu hidden" id="autoMenu">
+                    <div onclick="startAuto(10)">10</div>
+                    <div onclick="startAuto(50)">50</div>
+                    <div onclick="startAuto(100)">100</div>
+                    <div onclick="startAuto(1000)">1000</div>
+                </div>
+                <button id="btnAuto" class="btn-common btn-auto-main" onclick="toggleAutoMenu(event)">AUTO</button>
+            </div>
+            
+            <button id="btnCashout" class="btn-common btn-cashout-main" onclick="cashOut()">
+                CASH OUT
+                <span id="cashoutAmount" class="cashout-amount">$ 10.00</span>
+            </button>
+        </div>
     </div>
 </div>
 
 <script>
     const RTP_TARGET = 0.97;
-    const BET_COST = 1.0;
-    const FULL_CLEAR_PROB = 0.02;
-
+    const BET_COST = 10.0;
+    const FULL_CLEAR_PROB = 0.005; // 🌟 ALL CLEAR 觸發機率 (0.5%)
+    const CRASH_RATES = [0.05, 0.10, 0.15, 0.20, 0.25];
     const COLORS = {
         brown: { name: '咖啡色', class: 'bg-brown', min: 1.0, max: 3.0 },
         blue:  { name: '藍色',   class: 'bg-blue',  min: 3.0, max: 5.0 },
@@ -95,23 +324,64 @@
         silver:{ name: '銀色',   class: 'bg-silver',min: 8.0, max: 12.0 },
         gold:  { name: '金色',   class: 'bg-gold',  min: 12.0, max: 30.0 }
     };
+    const FEVER_TRIGGER_PROB = 0.10;
 
-    const CRASH_RATES = [0.05, 0.10, 0.15, 0.20, 0.25];
-
-    let balance = 100.0;
-    let energyPoints = 0; 
-    let accumulated = 0.0;
+    let balance = 10250.0;
+    let energyPoints = 10; 
+    let accumulated_multiplier = 30.0; 
     let currentLayerIndex = 0;
     let towerBlocks = [];
     let isGameOver = true;
     let isProcessing = false;
     let isSuspense = false;
+    let isCrash = false; 
+    let isAutoPlaying = false;
+    let autoSpinsLeft = 0;
 
-    function log(msg) {
-        const logCont = document.getElementById('logContainer');
-        logCont.innerHTML += `<div style="margin-bottom:5px; border-bottom:1px solid #333; padding:2px;">${msg}</div>`;
-        logCont.scrollTop = logCont.scrollHeight;
+    let isFeverTime = false;
+    let feverSpinsLeft = 0;
+    
+    // 🌟 開發者測試開關
+    let isForcedAllClear = false;
+
+    const scoreValue = document.getElementById('scoreValue');
+    const pointBarFill = document.getElementById('pointBarFill');
+    const pointText = document.getElementById('pointText');
+    const betAmount = document.getElementById('betAmount');
+    const cashoutAmount = document.getElementById('cashoutAmount');
+    const blockPreview = document.getElementById('blockPreview');
+    const predictionRange = document.getElementById('predictionRange');
+    const balanceDisplay = document.getElementById('balanceDisplay');
+    const btnHit = document.getElementById('btnHit');
+    const btnCashout = document.getElementById('btnCashout');
+    const btnRefresh = document.getElementById('btnRefresh');
+    const btnAuto = document.getElementById('btnAuto');
+    const gameOverOverlay = document.getElementById('gameOverOverlay');
+    const autoMenu = document.getElementById('autoMenu');
+
+    // === 開發者測試功能 ===
+    function forceAllClear() {
+        if(isGameOver) { alert("請先開始遊戲或等待本局結束"); return; }
+        isForcedAllClear = true;
+        alert("作弊開啟：下一次 HIT 必定觸發 ALL CLEAR 連擊！");
     }
+    function forceFever() {
+        if(isGameOver) { alert("請先開始遊戲或等待本局結束"); return; }
+        if(!isFeverTime) triggerFeverTime();
+    }
+
+    function updateHeaderStats() {
+        balanceDisplay.innerText = `$${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        pointText.innerText = `Point ${energyPoints}/50`;
+        pointBarFill.style.height = (energyPoints / 50 * 100) + '%';
+    }
+    function updateFooterPrediction() {
+        if(currentLayerIndex >= 5 || towerBlocks.length === 0) return;
+        const block = towerBlocks[currentLayerIndex];
+        blockPreview.className = `block-preview ${block.cssClass}`;
+        predictionRange.innerText = `${block.min}x-${block.max}x`;
+    }
+    function updateTowerScore() { scoreValue.innerText = `${accumulated_multiplier.toFixed(2)}x`; }
 
     function generateTowerData() {
         const weights = [
@@ -121,7 +391,6 @@
             { brown: 20, blue: 20, red: 20, silver: 20, gold: 20 },
             { brown: 30, blue: 30, red: 20, silver: 15, gold: 5 }
         ];
-
         towerBlocks = [];
         for (let i = 0; i < 5; i++) {
             let totalW = 0;
@@ -139,185 +408,393 @@
     }
 
     function startNewGame() {
-        accumulated = 0.0;
-        currentLayerIndex = 0;
-        isGameOver = false;
-        isProcessing = false;
-        generateTowerData();
-        log("<br/><b>--- 新局開始 ---</b>");
-        updateUI();
+        accumulated_multiplier = 0.0; currentLayerIndex = 0;
+        isGameOver = false; isProcessing = false; isCrash = false; isForcedAllClear = false;
+        gameOverOverlay.classList.add('hidden'); 
+        generateTowerData(); updateUI();
     }
 
     function refreshTower() {
-        if (currentLayerIndex > 0 || accumulated > 0) return;
-        generateTowerData();
-        log("<i>🔄 刷新塔配置...</i>");
+        if (currentLayerIndex > 0 || accumulated_multiplier > 0) return;
+        generateTowerData(); updateUI();
+    }
+
+    function toggleAutoMenu(event) {
+        event.stopPropagation();
+        if (isAutoPlaying || isProcessing) return; 
+        autoMenu.classList.toggle('hidden');
+    }
+    function hideAutoMenuOnBgClick(event) {
+        if (!document.getElementById('autoContainer').contains(event.target)) autoMenu.classList.add('hidden');
+    }
+    function startAuto(spins) {
+        autoMenu.classList.add('hidden');
+        if (!isFeverTime && balance < BET_COST) return; 
+        autoSpinsLeft = spins; isAutoPlaying = true; updateUI(); autoLoop();
+    }
+    function stopAuto() {
+        isAutoPlaying = false; autoSpinsLeft = 0; updateUI();
+    }
+    function handleHitClick() {
+        autoMenu.classList.add('hidden');
+        if (isAutoPlaying) stopAuto(); else hit();
+    }
+
+    async function autoLoop() {
+        while (isAutoPlaying && autoSpinsLeft > 0) {
+            if (isProcessing) { await new Promise(r => setTimeout(r, 100)); continue; }
+            if (!isFeverTime && balance < BET_COST) { stopAuto(); break; }
+            if (isGameOver) {
+                for (let i = 0; i < 15; i++) {
+                    await new Promise(r => setTimeout(r, 100));
+                    if (!isAutoPlaying || !isGameOver) break;
+                }
+                if (!isAutoPlaying) break;
+                if (isGameOver) { startNewGame(); await new Promise(r => setTimeout(r, 500)); }
+                continue; 
+            }
+            autoSpinsLeft--; updateUI(); 
+            await hit(); 
+            await new Promise(r => setTimeout(r, 300)); 
+        }
+        if (autoSpinsLeft <= 0) stopAuto();
+    }
+
+    async function triggerFeverTime() {
+        isFeverTime = true; feverSpinsLeft = 30;
+        const overlay = document.getElementById('feverOverlay');
+        const centerText = document.getElementById('feverCenterText');
+        centerText.className = 'fever-center-text fever-style';
+        centerText.innerHTML = 'FEVER TIME';
+        overlay.classList.remove('hidden');
+        await new Promise(r => setTimeout(r, 2000));
+        overlay.classList.add('hidden');
         updateUI();
+    }
+
+    async function endFeverTime() {
+        isFeverTime = false;
+        const overlay = document.getElementById('feverOverlay');
+        const centerText = document.getElementById('feverCenterText');
+        document.getElementById('feverUI').classList.add('hidden');
+        centerText.className = 'fever-center-text fever-complete-style';
+        centerText.innerHTML = 'FEVER TIME<br>COMPLETE';
+        centerText.style.animation = 'none'; centerText.offsetHeight; centerText.style.animation = null;
+        overlay.classList.remove('hidden');
+        await new Promise(r => setTimeout(r, 2000));
+        overlay.classList.add('hidden');
+        updateUI();
+    }
+
+    // 🌟 全清巨大化動畫 (ALL CLEAR 與 正常破關 共用)
+    async function playFullClearAnimation() {
+        const daruma = document.querySelector('.daruma');
+        const tower = document.getElementById('towerContainer');
+        if(!daruma) return;
+
+        daruma.classList.add('daruma-dancing');
+        await new Promise(r => setTimeout(r, 600)); 
+        daruma.classList.remove('daruma-dancing');
+
+        daruma.classList.add('daruma-giant');
+        await new Promise(r => setTimeout(r, 1000)); 
+
+        const x2Text = document.createElement('div');
+        x2Text.className = 'x2-text x2-flying';
+        x2Text.innerText = 'X2';
+        tower.appendChild(x2Text);
+
+        await new Promise(r => setTimeout(r, 1300)); 
+
+        scoreValue.classList.add('score-hitting');
+        scoreValue.innerText = `${(accumulated_multiplier * 2).toFixed(2)}x`;
+        
+        await new Promise(r => setTimeout(r, 200)); 
+        x2Text.remove();
+
+        await new Promise(r => setTimeout(r, 300)); 
+        scoreValue.classList.remove('score-hitting');
+    }
+
+    // 🌟 核心：ALL CLEAR 連擊演出腳本
+    async function executeAllClearSequence() {
+        // 1. 壓黑彈出 ALL CLEAR
+        const overlay = document.getElementById('allClearOverlay');
+        overlay.classList.remove('hidden');
+        await new Promise(r => setTimeout(r, 1500));
+        overlay.classList.add('hidden');
+        await new Promise(r => setTimeout(r, 300)); // 等待淡出
+
+        const tower = document.getElementById('towerContainer');
+        const blocks = Array.from(tower.querySelectorAll('.block')); // 從上到下的陣列
+        const daruma = tower.querySelector('.daruma');
+        const mallet = document.getElementById('mallet');
+        
+        // 2. 從最下層開始敲擊 (陣列反向操作)
+        for (let i = blocks.length - 1; i >= 0; i--) {
+            let targetBlock = blocks[i];
+            
+            // 對應的資料 Index：畫面有幾塊，就代表是哪幾層
+            let blockIndex = currentLayerIndex + (blocks.length - 1 - i);
+            let blockData = towerBlocks[blockIndex];
+
+            // 槌子蓄力
+            mallet.classList.add('pull-back');
+            await new Promise(r => setTimeout(r, 300));
+            mallet.classList.remove('pull-back');
+            
+            // 快速擊出
+            mallet.classList.add('power-swing');
+            await new Promise(r => setTimeout(r, 100));
+
+            // 木塊飛出
+            targetBlock.classList.add('fly-out');
+            
+            // 更新分數與彈跳
+            accumulated_multiplier += blockData.multiplier;
+            updateTowerScore();
+            scoreValue.classList.remove('score-hitting');
+            void scoreValue.offsetWidth; // 觸發重繪確保每次都彈跳
+            scoreValue.classList.add('score-hitting');
+
+            mallet.classList.remove('power-swing');
+            
+            // 下一次揮擊的間隔
+            await new Promise(r => setTimeout(r, 200)); 
+        }
+
+        // 3. 達摩掉落地面
+        let dropDist = blocks.length * 60; // 每塊木頭高 60px
+        daruma.style.transition = 'transform 0.4s cubic-bezier(0.5, 0, 0.8, 1)';
+        daruma.style.transform = `translateY(${dropDist}px)`;
+        
+        await new Promise(r => setTimeout(r, 400)); // 等掉落
+        
+        // 4. 重置變數並呼叫巨大化大獎
+        currentLayerIndex = 5;
+        renderTower(); // 讓達摩以原生狀態待在底部
+        
+        await playFullClearAnimation();
+        
+        accumulated_multiplier *= 2;
+        let d_amount = accumulated_multiplier * BET_COST;
+        balance += d_amount;
+        updateHeaderStats();
+        
+        if (isFeverTime && feverSpinsLeft <= 0) await endFeverTime();
+        endGame('win', d_amount);
     }
 
     async function hit() {
-        if (isGameOver || isProcessing || balance < BET_COST) return;
+        if (isGameOver || isProcessing) return;
+        if (!isFeverTime && balance < BET_COST) return;
+
         isProcessing = true;
         updateUI();
 
-        balance -= BET_COST;
+        if (isFeverTime) feverSpinsLeft--; else balance -= BET_COST;
+        
+        updateHeaderStats();
+        updateUI();
+
+        // 🌟 優先攔截 ALL CLEAR
+        if (isForcedAllClear || Math.random() < FULL_CLEAR_PROB) {
+            isForcedAllClear = false;
+            await executeAllClearSequence();
+            return; // ★ 完全攔截普通敲擊
+        }
+
         let block = towerBlocks[currentLayerIndex];
         let crashProb = CRASH_RATES[currentLayerIndex];
         
-        let denominator = block.multiplier - 0.2 * crashProb * (accumulated + block.multiplier);
-        let successProb = denominator > 0 ? (RTP_TARGET / denominator) : 0.99;
+        let expectedGain_amount = block.multiplier * BET_COST;
+        if (currentLayerIndex === 4) { expectedGain_amount = (accumulated_multiplier * BET_COST) + (2 * block.multiplier * BET_COST); }
+        let denominator_amount = expectedGain_amount - 0.2 * crashProb * (accumulated_multiplier * BET_COST + block.multiplier * BET_COST);
+        let successProb = denominator_amount > 0 ? (RTP_TARGET * BET_COST / denominator_amount) : 0.99;
         
-        if (energyPoints >= 50) {
-            successProb += 0.50; 
-            log(`<span class="energy-buff-active">✦ 能量釋放：本次敲擊成功率提升 50%！</span>`);
-            energyPoints = 0; 
-        }
+        if (isFeverTime) successProb *= 2;
 
+        let isChargedStrike = false;
+        if (energyPoints >= 50) { 
+            isChargedStrike = true; successProb += 0.50; energyPoints = 0; 
+        }
         successProb = Math.max(0.01, Math.min(successProb, 0.99));
+        
         let rollSuccess = Math.random();
+        let hitSuccess = rollSuccess <= successProb; 
+        let pendingMultiplier = block.multiplier;
 
-        log(`[敲擊 L${block.layer}] 區間: ${block.name} | 成功率: ${(successProb*100).toFixed(1)}%`);
-
-        if (rollSuccess <= successProb) {
-            // 🌟 修正點：使用 pendingWin 暫存，絕對不先加進 accumulated
-            let pendingWin = block.multiplier;
-            isSuspense = true;
-            updateUI(); // 此時畫面上的 Total 不會增加
-            
-            log(`<span style="color:#ffd54f;">✨ 成功揭曉倍率: +${pendingWin.toFixed(2)}x</span>`);
-            log(`<span style="color:#aaa;">⏳ 判定中... (塔身晃動)</span>`);
-            
-            document.getElementById('towerContainer').classList.add('shaking');
-            await new Promise(r => setTimeout(r, 1000));
-            document.getElementById('towerContainer').classList.remove('shaking');
-            isSuspense = false;
-
-            if (Math.random() < FULL_CLEAR_PROB && currentLayerIndex < 4) {
-                accumulated += pendingWin; // 觸發大獎，正式入帳
-                triggerFullClear();
-                return;
-            }
-
-            if (Math.random() <= crashProb) {
-                // 失敗崩塌結算
-                let totalWithPending = accumulated + pendingWin;
-                let p = totalWithPending * 0.8;
-                balance += p; // 失敗保護金正式進入餘額
-                accumulated = totalWithPending; // 畫面更新為最終結果，讓玩家知道 80% 是怎麼算出來的
-                log(`<span class="log-fail">💥 判定：失敗崩塌！(拿回 $${p.toFixed(2)})</span>`);
-                endGame();
-            } else {
-                // 安全結算
-                accumulated += pendingWin; // 🌟 確定安全後，才正式跳動 Total 數字！
-                currentLayerIndex++;
-                if (currentLayerIndex >= 5) {
-                    let d = accumulated * 2;
-                    balance += d;
-                    log(`<span class="log-warn">🎉 通關成功！獲得 Double Bonus: $${d.toFixed(2)}</span>`);
-                    endGame();
-                } else {
-                    log(`<span class="log-success">🛡️ 判定：安全！目前累計 $${accumulated.toFixed(2)}</span>`);
-                }
-            }
+        let targetBlock = document.querySelector('.block.target');
+        let mallet = document.getElementById('mallet');
+        let tower = document.getElementById('towerContainer');
+        
+        if (isChargedStrike) {
+            mallet.classList.add('pull-back');
+            await new Promise(r => setTimeout(r, 500)); 
+            mallet.classList.remove('pull-back');
+            mallet.classList.add('power-swing');
+            await new Promise(r => setTimeout(r, 100)); 
         } else {
+            mallet.classList.add('swing');
+            await new Promise(r => setTimeout(r, 150)); 
+        }
+        
+        if (!hitSuccess) {
             energyPoints = Math.min(50, energyPoints + 1);
-            log(`<span style="color:#aaa;">💨 毫無反應... (能量 +1，目前: ${energyPoints})</span>`);
+            targetBlock.classList.add('shaking-block');
+            await new Promise(r => setTimeout(r, 300));
+            targetBlock.classList.remove('shaking-block');
+            
+            mallet.classList.remove('swing'); mallet.classList.remove('power-swing');
+            
+            if (!isFeverTime && Math.random() < FEVER_TRIGGER_PROB) {
+                await triggerFeverTime();
+            } else if (isFeverTime && feverSpinsLeft <= 0) {
+                await endFeverTime();
+            }
+            
+            isProcessing = false; updateHeaderStats(); updateUI(); return; 
+        }
+
+        targetBlock.classList.add('fly-out');
+        tower.classList.add('shaking-tower'); 
+        await new Promise(r => setTimeout(r, 300)); 
+        
+        let dropDist = targetBlock.offsetHeight; 
+        let remainingElements = Array.from(tower.children).filter(el => el !== targetBlock);
+        remainingElements.forEach(el => {
+            el.style.transition = 'transform 0.2s cubic-bezier(0.5, 0, 0.8, 1)'; 
+            el.style.transform = `translateY(${dropDist}px)`;
+        });
+        await new Promise(r => setTimeout(r, 200)); 
+        
+        mallet.classList.remove('swing'); mallet.classList.remove('power-swing');
+
+        if (Math.random() <= crashProb) {
+            isCrash = true; 
+            remainingElements.forEach(el => {
+                el.style.transition = 'transform 0.5s ease-out, opacity 0.5s';
+                let randomX = (Math.random() - 0.5) * 300; let randomY = (Math.random()) * 150 + 50; let randomRot = (Math.random() - 0.5) * 180;
+                el.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRot}deg)`;
+                el.style.opacity = '0';
+            });
+            tower.classList.remove('shaking-tower'); 
+            await new Promise(r => setTimeout(r, 500));
+
+            let totalWithPending_multiplier = accumulated_multiplier + pendingMultiplier;
+            let p_multiplier = totalWithPending_multiplier * 0.8;
+            let takeBackAmount = p_multiplier * BET_COST; 
+
+            balance += takeBackAmount; 
+            updateHeaderStats(); accumulated_multiplier = totalWithPending_multiplier; updateTowerScore();
+            
+            if (isFeverTime && feverSpinsLeft <= 0) await endFeverTime();
+            endGame('crash', takeBackAmount); 
+        } else {
+            tower.classList.remove('shaking-tower'); 
+            await new Promise(r => setTimeout(r, 200)); 
+            
+            accumulated_multiplier += pendingMultiplier; 
+            currentLayerIndex++;
+            updateTowerScore();
+            if (currentLayerIndex >= 5) {
+                renderTower(); 
+                await playFullClearAnimation();
+                
+                accumulated_multiplier *= 2;
+                let d_amount = accumulated_multiplier * BET_COST;
+                balance += d_amount;
+                updateHeaderStats();
+                
+                if (isFeverTime && feverSpinsLeft <= 0) await endFeverTime();
+                endGame('win', d_amount);
+            } else {
+                if (isFeverTime && feverSpinsLeft <= 0) await endFeverTime();
+                updateUI();
+            }
         }
 
         isProcessing = false;
-        updateUI();
-    }
-    // 獨立出來的全清邏輯
-    function triggerFullClear() {
-        log(`<div class="log-special">🔥 特殊觸發：全清 BONUS！🔥</div>`);
-        for (let j = currentLayerIndex + 1; j < 5; j++) {
-            let b = towerBlocks[j];
-            accumulated += b.multiplier;
-            log(`-> 自動敲落 L${b.layer}: ${b.name} (+${b.multiplier.toFixed(2)}x)`);
-        }
-        let totalWithDouble = accumulated * 2;
-        balance += totalWithDouble;
-        log(`<span class="log-warn">🎉 全清獎勵完成！最終獎金 x2 = $${totalWithDouble.toFixed(2)}</span>`);
-        endGame();
+        updateUI(); 
     }
 
-    // 測試專用：強制觸發全清按鈕邏輯
-    async function forceFullClear() {
-        if (isGameOver || isProcessing || balance < BET_COST) return;
-        isProcessing = true;
-        updateUI();
-
-        balance -= BET_COST;
-        let block = towerBlocks[currentLayerIndex];
-        
-        log(`[🧪 測試模式] 強制敲擊 L${block.layer} 並保證觸發全清！`);
-
-        // 🌟 修正點：使用 pendingWin 暫存
-        let pendingWin = block.multiplier;
-        isSuspense = true;
-        updateUI();
-        
-        log(`<span style="color:#ffd54f;">✨ 成功揭曉倍率: +${pendingWin.toFixed(2)}x</span>`);
-        log(`<span style="color:#aaa;">⏳ 判定中... (塔身晃動)</span>`);
-        
-        document.getElementById('towerContainer').classList.add('shaking');
-        await new Promise(r => setTimeout(r, 1000));
-        document.getElementById('towerContainer').classList.remove('shaking');
-        isSuspense = false;
-
-        accumulated += pendingWin; // 確定觸發後才入帳
-        triggerFullClear();
-    }
     function cashOut() {
-        balance += accumulated;
-        log(`<span class="log-success">💰 安全下莊！拿走 $${accumulated.toFixed(2)}</span>`);
-        endGame();
+        let winAmount = accumulated_multiplier * BET_COST; balance += winAmount;
+        updateHeaderStats(); endGame('win', winAmount);
     }
 
-    function endGame() {
-        isGameOver = true;
-        isProcessing = false;
-        updateUI();
+    function endGame(status, winAmount = 0) {
+        isGameOver = true; isProcessing = false; updateUI();
+        const breatheContainer = document.getElementById('gameOverBreathe');
+        const popContainer = document.getElementById('gameOverPop');
+        popContainer.style.animation = 'none'; popContainer.offsetHeight; popContainer.style.animation = null;
+
+        if (status === 'win') {
+            breatheContainer.innerHTML = `<div class="win-title">You have won</div><div class="win-score">$ ${winAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+        } else {
+            breatheContainer.innerHTML = `<div class="win-title" style="color: #ff9f43;">You have won 80% score</div><div class="win-score" style="color: #fff;">$ ${winAmount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>`;
+        }
+        setTimeout(() => { gameOverOverlay.classList.remove('hidden'); }, 300);
     }
 
     function updateUI() {
-        document.getElementById('balanceDisplay').innerText = `$${balance.toFixed(2)}`;
-        document.getElementById('accumulatedDisplay').innerText = `$${accumulated.toFixed(2)}`;
-        document.getElementById('energyCount').innerText = energyPoints;
-        document.getElementById('energyBarFill').style.width = (energyPoints / 50 * 100) + '%';
-        document.getElementById('energyBuffStatus').style.display = (energyPoints >= 50) ? 'block' : 'none';
+        updateHeaderStats(); updateTowerScore(); betAmount.innerText = `$${BET_COST}`;
+        if (!isGameOver && towerBlocks.length > 0) updateFooterPrediction();
+        cashoutAmount.innerText = `$ ${(accumulated_multiplier * BET_COST).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
         
-        const bH = document.getElementById('btnHit');
-        const bC = document.getElementById('btnCashout');
-        const bR = document.getElementById('btnRefresh');
-        const bN = document.getElementById('btnNewGame');
-        const bTest = document.getElementById('btnTestClear');
-
-        if (isGameOver) {
-            bH.disabled = bC.disabled = bR.disabled = bTest.disabled = true;
-            bN.style.display = 'block'; bR.style.display = 'none'; bTest.style.display = 'none';
+        const feverUI = document.getElementById('feverUI');
+        const feverCount = document.getElementById('feverCount');
+        if (isFeverTime) {
+            feverUI.classList.remove('hidden'); feverCount.innerText = feverSpinsLeft;
         } else {
-            bN.style.display = 'none'; bR.style.display = 'block'; bTest.style.display = 'block';
-            bH.disabled = isProcessing;
-            bC.disabled = isProcessing || accumulated <= 0;
-            bR.disabled = isProcessing || currentLayerIndex > 0;
-            // 修改點：移除了 currentLayerIndex >= 4 的按鈕反灰限制
-            bTest.disabled = isProcessing; 
+            feverUI.classList.add('hidden');
         }
+
+        const hitContent = document.getElementById('hitContent');
+        const autoContent = document.getElementById('autoContent');
+        const autoCountText = document.getElementById('autoCountText');
+
+        if (isAutoPlaying) {
+            hitContent.style.display = 'none'; autoContent.style.display = 'flex'; autoCountText.innerText = autoSpinsLeft;
+            btnHit.style.background = 'linear-gradient(180deg, #ff4757, #8b0000)'; btnHit.style.borderColor = '#8b0000';
+            btnHit.disabled = false; btnAuto.disabled = true;
+        } else {
+            hitContent.style.display = 'flex'; autoContent.style.display = 'none';
+            btnHit.style.background = 'linear-gradient(180deg, #ff4757, #cc0000)'; btnHit.style.borderColor = '#cc0000';
+            btnHit.disabled = isProcessing || isGameOver || (!isFeverTime && balance < BET_COST);
+            btnAuto.disabled = isProcessing || isGameOver || (!isFeverTime && balance < BET_COST);
+        }
+
+        btnCashout.disabled = isAutoPlaying || isProcessing || isGameOver || accumulated_multiplier <= 0;
+        btnRefresh.disabled = isFeverTime || isAutoPlaying || isProcessing || isGameOver || currentLayerIndex > 0;
+        
         renderTower();
+        let mallet = document.getElementById('mallet');
+        if (mallet) { 
+            if (isGameOver) {
+                mallet.classList.add('hidden'); 
+            } else {
+                mallet.classList.remove('hidden'); 
+                if (energyPoints >= 50) mallet.classList.add('charged'); else mallet.classList.remove('charged');
+            }
+        }
     }
 
     function renderTower() {
         const container = document.getElementById('towerContainer');
         container.innerHTML = '';
-        let dStyle = (isGameOver && currentLayerIndex < 5 && accumulated > 0) ? 'transform:rotate(30deg) translate(10px,10px);opacity:0.5;' : '';
-        if(isGameOver && currentLayerIndex >= 5) dStyle = 'transform:scale(1.2);box-shadow:0 0 20px #ffd54f;';
-        container.innerHTML += `<div class="daruma" style="${dStyle}">福</div>`;
+        if (towerBlocks.length === 0) return;
+
+        if (isGameOver && isCrash) { container.innerHTML += `<div class="daruma" style="transform:rotate(30deg) translate(10px,10px); opacity:0.5;"></div>`; return; }
+
+        let dStyle = (isGameOver && currentLayerIndex < 5 && accumulated_multiplier > 0) ? 'transform:rotate(30deg) translate(10px,10px);opacity:0.5;' : '';
+        if(isGameOver && currentLayerIndex >= 5) dStyle = 'transform:scale(4); transform-origin: bottom center; box-shadow:0 0 50px rgba(255,213,79,0.8); border-radius:50%; z-index:50;';
+        
+        container.innerHTML += `<div class="daruma" style="${dStyle}"></div>`;
         for (let i = 4; i >= currentLayerIndex; i--) {
             if (i === currentLayerIndex && isSuspense) continue;
-            let b = towerBlocks[i];
-            let target = (i === currentLayerIndex && !isGameOver && !isSuspense) ? 'target' : '';
-            container.innerHTML += `<div class="block ${b.cssClass} ${target}">L${b.layer} | ${b.min}x ~ ${b.max}x</div>`;
+            let b = towerBlocks[i]; let target = (i === currentLayerIndex && !isGameOver && !isSuspense) ? 'target' : '';
+            container.innerHTML += `<div class="block ${b.cssClass} ${target}"></div>`;
         }
     }
 
