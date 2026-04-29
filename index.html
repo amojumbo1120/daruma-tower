@@ -4,29 +4,45 @@
     <meta name="robots" content="noindex, nofollow">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>達摩塔 (Daruma Tower) - V3.24</title>
+    <title>達摩塔 (Daruma Tower) - V3.28 完美貼地版</title>
     <style>
-        /* 重置基礎樣式 */
+        /* 重置基礎樣式，滿版黑底置中 */
         body { 
             font-family: 'Segoe UI', sans-serif; background-color: #000; margin: 0; 
             display: flex; justify-content: center; align-items: center; 
             height: 100dvh; width: 100vw; overflow: hidden;
         }
         
-        /* === 🌟 核心畫布 (原生 CSS 動態縮放) === */
+        /* === 🌟 核心：鎖定 420x740 完美畫布，靠 JS 縮放 === */
         .game-app {
             position: relative; 
-            width: 100vw; 
-            height: 100dvh; 
-            max-width: calc(100dvh * (1050 / 1680)); /* 鎖定比例 */
+            width: 420px; 
+            height: 740px; 
             background: #1e1e24; display: flex; flex-direction: column; overflow: hidden;
             box-shadow: 0 0 30px rgba(255,255,255,0.1);
+            transform-origin: center center;
         }
 
-        /* === 測試用功能面板 (左上角) === */
+        /* === Header === */
+        .header { 
+            width: 100%; height: 60px; flex-shrink: 0; 
+            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: space-between; 
+            padding: 0 15px; box-sizing: border-box; z-index: 100; border-bottom: 2px solid #5d4037; 
+        }
+        .balance-section { color: #fff; font-size: 14px; font-weight: bold; }
+        .settings-icon { font-size: 20px; opacity: 0.7; cursor: pointer; color: white; }
+
+        /* === 遊戲內容區 === */
+        .game-content { 
+            flex: 1; position: relative; background-image: url('Background.png'); 
+            background-size: cover; background-position: center bottom; overflow: hidden;
+            display: flex; flex-direction: column; padding-bottom: 0px; 
+        }
+
+        /* === 🌟 測試面板 (移至右側防擋) === */
         .dev-panel {
-            position: absolute; top: 65px; left: 10px; z-index: 999;
-            display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+            position: absolute; top: 15px; right: 15px; z-index: 999;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
             opacity: 0.5; transition: opacity 0.3s;
         }
         .dev-panel:hover { opacity: 1; }
@@ -36,52 +52,49 @@
             font-weight: bold; transition: 0.2s;
         }
         .btn-dev:hover { background: #fff; color: #000; }
-
-        /* === Header === */
-        .header { 
-            width: 100%; height: min(60px, 8dvh); flex-shrink: 0; 
-            background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: space-between; 
-            padding: 0 15px; box-sizing: border-box; z-index: 100; border-bottom: 2px solid #5d4037; 
-        }
-        .balance-section { color: #fff; font-size: min(14px, 3.5vw); font-weight: bold; }
-        .settings-icon { font-size: 20px; opacity: 0.7; cursor: pointer; color: white;}
-
-        /* === 遊戲內容區 === */
-        .game-content { 
-            flex: 1; position: relative; background-image: url('Background.png'); 
-            background-size: cover; background-position: center bottom; overflow: hidden;
-            display: flex; flex-direction: column; padding-bottom: 0px; 
-        }
         
-        /* === Point 計量條 === */
-        .point-counter { 
-            position: absolute; right: 15px; top: 45%; transform: translateY(-50%); 
-            display: flex; flex-direction: column; align-items: center; z-index: 10;
-            height: 50dvh; 
+        /* 🌟 FEVER TIME UI (縮小並固定在左上方) */
+        .fever-ui { position: absolute; left: 15px; top: 120px; z-index: 100; display: flex; flex-direction: column; align-items: flex-start; }
+        .fever-ui.hidden { display: none; }
+        .fever-ui-title { font-size: 24px; font-weight: 900; font-style: italic; background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff); background-size: 200% auto; -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 0 5px rgba(255,0,255,0.8)); animation: textShine 2s linear infinite; margin-bottom: 2px;}
+        .fever-ui-sub { font-size: 14px; color: #ffd54f; font-weight: bold; text-shadow: 1px 1px 2px #000; margin-top: -2px; letter-spacing: 1px; }
+        .fever-ui-count { font-size: 14px; color: #fff; font-weight: bold; margin-top: 2px; text-shadow: 1px 1px 2px #000; }
+        .fever-count-num { color: #00f2fe; font-size: 20px; }
+
+        /* 🌟 分數與徽章 (絕對置中、貼緊上方) */
+        .score-display { 
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%); 
+            text-align: center; z-index: 10; width: 100%; pointer-events: none; 
         }
-        .point-text { background: rgba(0,0,0,0.7); color: #fff; padding: 5px 8px; border-radius: 5px; margin-bottom: 8px; font-size: min(11px, 2.5vw); white-space: nowrap;}
-        .point-bar-bg { width: 12px; flex: 1; background: #1a1a20; border-radius: 6px; border: 2px solid #444; overflow: hidden; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.8) inset;}
+        .score-bonus-medal { 
+            width: 180px; height: 35px; background: rgba(139,69,19,0.8); border-radius: 20px; 
+            display: inline-flex; align-items: center; justify-content: center; border: 2px solid #ffd54f; 
+            box-shadow: 0 0 10px rgba(255,213,79,0.5); margin-bottom: 8px; /* 拉近與分數的距離 */
+        }
+        .score-bonus-medal img { height: 20px; margin-right: 8px; }
+        .score-bonus-medal span { color: #ffd54f; font-weight: bold; font-size: 13px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .score-label { background: #fff; color: #000; padding: 4px 12px; border-radius: 12px; font-weight: bold; font-size: 13px; display: inline-block; margin-bottom: 2px;}
+        .score-value { color: #ffd54f; font-size: 36px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-top: 0; display: inline-block; transition: color 0.3s, text-shadow 0.3s; }
+
+        /* 🌟 Point 計量條 (縮短為 200px) */
+        .point-counter { 
+            position: absolute; right: 15px; top: 55%; transform: translateY(-50%); 
+            display: flex; flex-direction: column; align-items: center; z-index: 10;
+        }
+        .point-text { background: rgba(0,0,0,0.7); color: #fff; padding: 4px 6px; border-radius: 5px; margin-bottom: 6px; font-size: 10px; white-space: nowrap;}
+        .point-bar-bg { width: 10px; height: 200px; background: #1a1a20; border-radius: 5px; border: 2px solid #444; overflow: hidden; position: relative; box-shadow: 0 0 10px rgba(0,0,0,0.8) inset;}
         .point-bar-fill { width: 100%; height: 0%; background: linear-gradient(0deg, #ffd54f, #ff9f43); transition: height 0.3s; position: absolute; bottom: 0; }
 
-        /* === 分數顯示區 === */
-        .score-display { text-align: center; margin-top: 8dvh; margin-bottom: auto; z-index: 10; }
-        .score-bonus-medal { 
-            width: clamp(160px, 45vw, 210px); height: min(40px, 6dvh); 
-            background: rgba(139,69,19,0.8); border-radius: 25px; 
-            display: inline-flex; align-items: center; justify-content: center; border: 2px solid #ffd54f; 
-            box-shadow: 0 0 10px rgba(255,213,79,0.5); margin-bottom: 3dvh; 
+        /* 🌟 塔與木塊 (取消50px浮空，改為完美貼地 5px) */
+        .tower { 
+            display: flex; flex-direction: column; align-items: center; 
+            margin-top: auto; 
+            margin-bottom: 5px; /* ★ 修正浮空，只留極小間隙給青色光暈 ★ */
+            width: 100%; z-index: 5; position: relative; 
         }
-        .score-bonus-medal img { height: min(25px, 4dvh); margin-right: 8px; }
-        .score-bonus-medal span { color: #ffd54f; font-weight: bold; font-size: min(14px, 3.5vw); text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-        .score-label { background: #fff; color: #000; padding: 4px 15px; border-radius: 15px; font-weight: bold; font-size: min(13px, 3vw); display: inline-block; }
-        .score-value { color: #ffd54f; font-size: min(38px, 9vw); font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); margin-top: 5px; display: inline-block; transition: color 0.3s, text-shadow 0.3s; }
-
-        /* === 達摩塔與積木 === */
-        .tower { display: flex; flex-direction: column; align-items: center; margin-top: auto; width: 100%; z-index: 5; position: relative;}
         
         .block { 
-            width: clamp(150px, 45vw, 200px); 
-            height: min(55px, 7dvh); 
+            width: 180px; height: 55px; 
             margin-bottom: 0px; border-radius: 8px; display: flex; align-items: center; justify-content: center; 
             font-weight: bold; color: #000; position: relative; font-size: 14px; 
             text-shadow: 1px 1px 2px rgba(255,255,255,0.8); background-size: 100% 100%; background-position: center; 
@@ -92,23 +105,20 @@
         .fly-out { transform: scale(1) translateX(-300px) rotate(-15deg) !important; opacity: 0 !important; }
         
         .daruma { 
-            width: min(90px, 12dvh); height: min(90px, 12dvh);
+            width: 90px; height: 90px;
             background-image: url('Daruma.png'); background-size: contain; background-repeat: no-repeat; background-position: center bottom;
             display: flex; align-items: center; justify-content: center; margin-bottom: 0px; transition: transform 0.3s; z-index: 5; 
         }
         
-        .bg-brown { background-image: url('Tower-Brown.png'); } 
-        .bg-blue { background-image: url('Tower-Blue.png'); } 
-        .bg-red { background-image: url('Tower-Red.png'); } 
-        .bg-silver { background-image: url('Tower-Sliver.png'); } 
-        .bg-gold { background-image: url('Tower-Gold.png'); }
+        .bg-brown { background-image: url('Tower-Brown.png'); } .bg-blue { background-image: url('Tower-Blue.png'); } .bg-red { background-image: url('Tower-Red.png'); } .bg-silver { background-image: url('Tower-Sliver.png'); } .bg-gold { background-image: url('Tower-Gold.png'); }
 
+        /* 🌟 槌子 (同步降落貼地) */
         .mallet {
-            position: absolute; 
-            width: min(130px, 18dvh); height: min(130px, 18dvh); 
+            position: absolute; width: 100px; height: 100px; 
             background-image: url('Mallet.png'); background-size: contain; background-repeat: no-repeat; background-position: center;
-            right: 12%; z-index: 20; transform: rotate(30deg); transform-origin: right bottom; 
-            transition: right 0.15s ease-in, transform 0.15s ease-in, opacity 0.3s; pointer-events: none; opacity: 1; bottom: 0px; 
+            right: 15%; z-index: 20; transform: rotate(30deg); transform-origin: right bottom; 
+            transition: right 0.15s ease-in, transform 0.15s ease-in, opacity 0.3s; pointer-events: none; opacity: 1; 
+            bottom: 5px; /* ★ 同步塔的高度 ★ */
         }
         .mallet.charged { animation: pulse-glow 1s infinite alternate; }
         @keyframes pulse-glow { 0% { filter: drop-shadow(0 0 5px #ffd54f); } 100% { filter: drop-shadow(0 0 25px #ff9f43) drop-shadow(0 0 10px #ff4757); } }
@@ -117,24 +127,18 @@
         .mallet.power-swing { right: 28%; transform: rotate(-20deg) !important; transition: right 0.1s ease-in, transform 0.1s ease-in; }
         .mallet.hidden { opacity: 0; }
 
-        /* === FEVER TIME UI === */
-        .fever-ui { position: absolute; left: 15px; z-index: 100; display: flex; flex-direction: column; align-items: flex-start; top: 25%; }
-        .fever-ui.hidden { display: none; }
-        .fever-ui-title { font-size: min(32px, 8vw); font-weight: 900; font-style: italic; background: linear-gradient(90deg, #ff00ff, #00ffff, #ff00ff); background-size: 200% auto; -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 0 5px rgba(255,0,255,0.8)); animation: textShine 2s linear infinite; margin-bottom: 2px;}
-        .fever-ui-sub { font-size: min(18px, 4.5vw); color: #ffd54f; font-weight: bold; text-shadow: 1px 1px 2px #000; margin-top: -2px; letter-spacing: 1px; }
-        .fever-ui-count { font-size: min(18px, 4.5vw); color: #fff; font-weight: bold; margin-top: 2px; text-shadow: 1px 1px 2px #000; }
-        .fever-count-num { color: #00f2fe; font-size: min(24px, 6vw); }
-
-        .fever-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 250; display: flex; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.3s; }
-        .fever-overlay.hidden { opacity: 0; pointer-events: none; }
-        .fever-center-text { font-size: min(56px, 12vw); font-weight: 900; font-style: italic; text-align: center; animation: popInFever 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; line-height: 1.1; }
+        /* === 特效遮罩 === */
+        .fever-overlay, .all-clear-overlay, .game-over-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 250; display: flex; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.3s; }
+        .fever-overlay { background: rgba(0,0,0,0.4); }
+        .all-clear-overlay { background: rgba(0,0,0,0.2); }
+        .game-over-overlay { background: rgba(0,0,0,0.85); z-index: 300; cursor: pointer;}
+        
+        .fever-overlay.hidden, .all-clear-overlay.hidden, .game-over-overlay.hidden { opacity: 0; pointer-events: none; }
+        
+        .fever-center-text { font-size: 56px; font-weight: 900; font-style: italic; text-align: center; animation: popInFever 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; line-height: 1.1; }
         .fever-style { background: linear-gradient(90deg, #ff0055, #ffdd00, #00ffaa, #00aaff, #ff00ff); background-size: 400% 400%; -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 0 15px #ff00ff) drop-shadow(0 0 30px #ff0055); animation: feverGlow 2s linear infinite; }
         .fever-complete-style { color: #80d8ff; text-shadow: 0 0 20px #00b0ff, 0 0 40px #00b0ff, 0 0 60px #00b0ff; }
-
-        /* === ALL CLEAR === */
-        .all-clear-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.2); z-index: 250; display: flex; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.3s; }
-        .all-clear-overlay.hidden { opacity: 0; pointer-events: none; }
-        .all-clear-text { font-size: min(60px, 13vw); font-weight: 900; font-style: italic; text-align: center; color: #ffb300; text-shadow: 0 0 15px #ffea00, 0 0 30px #ff9800, 0 0 50px #ff5722, 4px 4px 0 #000; animation: popInFever 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .all-clear-text { font-size: 60px; font-weight: 900; font-style: italic; text-align: center; color: #ffb300; text-shadow: 0 0 15px #ffea00, 0 0 30px #ff9800, 0 0 50px #ff5722, 4px 4px 0 #000; animation: popInFever 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 
         @keyframes textShine { to { background-position: 200% center; } }
         @keyframes feverGlow { 0% { background-position: 0% 50%; filter: drop-shadow(0 0 15px #ff00ff) drop-shadow(0 0 30px #ff0055); } 50% { background-position: 100% 50%; filter: drop-shadow(0 0 15px #00ffff) drop-shadow(0 0 30px #00ffaa); } 100% { background-position: 0% 50%; filter: drop-shadow(0 0 15px #ff00ff) drop-shadow(0 0 30px #ff0055); } }
@@ -142,49 +146,44 @@
 
         /* === Footer === */
         .footer { 
-            width: 100%; height: min(150px, 20dvh); flex-shrink: 0; 
+            width: 100%; height: 160px; flex-shrink: 0; 
             background-image: url('ButtomBackground.png'); background-color: #1a1a1a; 
             background-size: cover; background-position: center top; 
             display: flex; align-items: center; justify-content: space-between; 
-            padding: 0 2%; box-sizing: border-box; z-index: 100; position: relative; border-top: none;
+            padding: 0 10px; box-sizing: border-box; z-index: 100; position: relative; border-top: none;
         }
         
-        .footer-left { display: flex; align-items: center; gap: 4px; z-index: 10; width: 33%; justify-content: flex-start;}
-        .footer-center { position: absolute; left: 50%; transform: translateX(-50%); bottom: 10px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; z-index: 110; width: 33%;}
-        .footer-right { display: flex; align-items: center; gap: 4px; z-index: 10; width: 33%; justify-content: flex-end;}
+        .footer-left { display: flex; align-items: center; gap: 5px; z-index: 10; width: 33%;}
+        .footer-center { display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 110; width: 33%; margin-top: -30px;}
+        .footer-right { display: flex; align-items: center; justify-content: flex-end; gap: 5px; z-index: 10; width: 33%;}
 
-        /* 🌟 版本號專用包裝容器 */
-        .prediction-wrapper { display: flex; flex-direction: column; align-items: center; gap: 3px; }
-        
-        .prediction { display: flex; flex-direction: column; align-items: center; border: 2px solid #ffd54f; border-radius: 10px; background: rgba(139,69,19,0.5); padding: 5px 2px; color: #fff; width: clamp(50px, 14vw, 70px); text-align: center;}
+        .prediction-wrapper { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .prediction { display: flex; flex-direction: column; align-items: center; border: 2px solid #ffd54f; border-radius: 10px; background: rgba(139,69,19,0.5); padding: 5px 2px; color: #fff; width: 70px; text-align: center;}
         .prediction-label { font-size: 8px; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 1px; color: #aaa; }
-        .block-preview { width: 80%; height: 20px; border-radius: 5px; background-size: 100% 100%; border: 1px solid #444; }
-        .prediction-range { color: #00f2fe; font-size: min(11px, 2.5vw); font-weight: bold; margin-top: 3px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
-
-        .version-text { color: rgba(255, 255, 255, 0.4); font-size: 9px; font-weight: bold; letter-spacing: 1px; }
+        .block-preview { width: 60px; height: 22px; border-radius: 5px; background-size: 100% 100%; border: 1px solid #444; }
+        .prediction-range { color: #00f2fe; font-size: 11px; font-weight: bold; margin-top: 3px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8); }
+        .version-text { color: rgba(255, 255, 255, 0.4); font-size: 10px; font-weight: bold; letter-spacing: 1px; }
 
         .btn-common { border-radius: 8px; font-weight: bold; color: white; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.1s, filter 0.2s;}
         .btn-common:active:not(:disabled) { transform: scale(0.95); }
         .btn-common:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(80%); }
         
-        .btn-refresh-main, .btn-auto-main, .btn-cashout-main {
-            width: clamp(60px, 16vw, 85px); height: min(45px, 6dvh); font-size: min(12px, 3vw);
-        }
+        .btn-refresh-main, .btn-auto-main, .btn-cashout-main { width: 70px; height: 45px; font-size: 12px; }
         .btn-refresh-main { background: linear-gradient(180deg, #4fc3f7, #0277bd); border: 2px solid #0277bd; box-shadow: 0 0 10px rgba(79,195,247,0.5); }
         .btn-auto-main { background: linear-gradient(180deg, #ff9f43, #e67e22); border: 2px solid #e67e22; box-shadow: 0 0 10px rgba(230,126,34,0.5); }
-        .btn-cashout-main { background: linear-gradient(180deg, #2ed573, #009900); border: 2px solid #009900; box-shadow: 0 0 10px rgba(46,213,115,0.5); }
+        .btn-cashout-main { background: linear-gradient(180deg, #2ed573, #009900); border: 2px solid #009900; box-shadow: 0 0 10px rgba(46,213,115,0.5); width: 75px; }
         .cashout-amount { color: #ffd54f; font-size: 10px; margin-top: 2px; }
 
         .btn-hit-main { 
             background: linear-gradient(180deg, #ff4757, #cc0000); color: white; 
-            width: clamp(75px, 20vw, 90px); height: clamp(75px, 20vw, 90px); 
-            border-radius: 50%; font-size: min(20px, 5vw); font-weight: bold; border: 4px solid #cc0000; 
+            width: 85px; height: 85px; 
+            border-radius: 50%; font-size: 20px; font-weight: bold; border: 4px solid #cc0000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: 0 0 15px rgba(255,71,87,0.5); cursor: pointer; transition: transform 0.1s, box-shadow 0.2s, background 0.3s;
         }
         .btn-hit-main:hover:not(:disabled) { box-shadow: 0 0 20px rgba(255,71,87,0.8); }
         .btn-hit-main:active:not(:disabled) { transform: scale(0.95); }
         .btn-hit-main:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(50%);}
-        .hit-icon { height: min(28px, 6vw); margin-top: 2px; }
+        .hit-icon { height: 28px; margin-top: 2px; }
 
         #hitContent, #autoContent { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; }
         
@@ -195,20 +194,17 @@
         .auto-menu div:hover { background: #ffd54f; color: #000; }
         .auto-menu div:last-child { border-bottom: none; }
         
-        .bet-selector { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 5px; color: #ffd54f; font-weight: bold;}
-        .bet-label { font-size: min(12px, 3vw); color: #ffd54f; margin-right: 2px;}
-        .bet-amount { font-size: min(18px, 4vw); }
-        .bet-btn { color: #2ed573; font-size: min(24px, 6vw); font-weight: bold; cursor: pointer; padding: 0 10px; }
+        .bet-selector { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px; color: #ffd54f; font-weight: bold;}
+        .bet-label { font-size: 14px; color: #ffd54f; margin-right: 2px;}
+        .bet-amount { font-size: 20px; }
+        .bet-btn { color: #2ed573; font-size: 28px; font-weight: bold; cursor: pointer; padding: 0 10px; }
 
-        /* === 重置遮罩 === */
-        .game-over-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 300; display: flex; justify-content: center; align-items: center; opacity: 1; transition: opacity 0.3s; cursor: pointer; }
-        .game-over-overlay.hidden { opacity: 0; pointer-events: none; }
+        /* 動畫區 */
         .pop-container { animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
         .breathe-container { display: flex; flex-direction: column; align-items: center; justify-content: center; animation: breathe 2s ease-in-out infinite; animation-delay: 0.6s; }
         .win-title { font-size: 28px; color: #fff; margin-bottom: 10px; font-weight: bold; letter-spacing: 2px; text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
         .win-score { font-size: 56px; font-weight: bold; color: #ffd54f; text-shadow: 0 0 30px rgba(255,213,79,1); }
 
-        /* 動畫區 */
         @keyframes popIn { 0% { transform: scale(0.3); opacity: 0; } 60% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
         @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
         @keyframes shake-tower { 0% {transform: translate(1px, 1px) rotate(0deg);} 50% {transform: translate(-2px, 2px) rotate(-1deg);} 100% {transform: translate(1px, -1px) rotate(0deg);} }
@@ -222,7 +218,7 @@
         @keyframes daruma-grow { 0% { transform: scale(1); box-shadow: 0 0 0px rgba(255,213,79,0); } 100% { transform: scale(3); box-shadow: 0 0 50px rgba(255,213,79,0.8); } }
         .daruma-giant { animation: daruma-grow 1s ease-in-out forwards !important; transform-origin: bottom center !important; z-index: 50 !important; border-radius: 50%; }
         
-        .x2-text { position: absolute; color: #fffb00; font-size: min(72px, 15vw); font-weight: bold; text-align: center; left: 50%; bottom: 120px; text-shadow: 0 0 10px #ffea00, 0 0 20px #ffea00, 0 0 40px #ff9800, 0 0 80px #ff5722, 3px 3px 0px #000; z-index: 60; pointer-events: none; opacity: 0; }
+        .x2-text { position: absolute; color: #fffb00; font-size: 72px; font-weight: bold; text-align: center; left: 50%; bottom: 120px; text-shadow: 0 0 10px #ffea00, 0 0 20px #ffea00, 0 0 40px #ff9800, 0 0 80px #ff5722, 3px 3px 0px #000; z-index: 60; pointer-events: none; opacity: 0; }
         @keyframes x2-fly { 0% { transform: translateX(-50%) scale(0.5); opacity: 0; } 6.6% { transform: translateX(-50%) scale(1); opacity: 1; } 40% { transform: translateX(-50%) scale(1); opacity: 1; } 60% { transform: translateX(-50%) translateY(30px) scale(0.9); opacity: 1; filter: drop-shadow(0 0 20px #ff0000); } 100% { transform: translateX(-50%) translateY(-40vh) scale(0.5); opacity: 0; } }
         .x2-flying { animation: x2-fly 1.5s ease-in-out forwards; }
         @keyframes score-hit-anim { 0% { transform: scale(1); color: #ffd54f; } 40% { transform: scale(1.6) translateY(-15px); color: #fffb00; text-shadow: 0 0 30px #ffea00, 0 0 50px #ff5722; } 100% { transform: scale(1); color: #ffd54f; } }
@@ -233,11 +229,6 @@
 <body onclick="hideAutoMenuOnBgClick(event)">
 
 <div class="game-app" id="gameApp">
-    
-    <div class="dev-panel">
-        <button class="btn-dev" style="border-color: #ff9800;" onclick="forceAllClear()">Force: ALL CLEAR</button>
-        <button class="btn-dev" style="border-color: #ff00ff;" onclick="forceFever()">Force: FEVER TIME</button>
-    </div>
 
     <div class="header">
         <div class="balance-section">PLAYER BALANCE: <span id="balanceDisplay">$10,250.00</span></div>
@@ -245,6 +236,11 @@
     </div>
 
     <div class="game-content">
+        <div class="dev-panel">
+            <button class="btn-dev" style="border-color: #ff9800;" onclick="forceAllClear()">Force: ALL CLEAR</button>
+            <button class="btn-dev" style="border-color: #ff00ff;" onclick="forceFever()">Force: FEVER TIME</button>
+        </div>
+
         <div id="feverUI" class="fever-ui hidden">
             <div class="fever-ui-title">FEVER TIME</div>
             <div class="fever-ui-sub">Double Chance</div>
@@ -291,9 +287,8 @@
                     <div id="blockPreview" class="block-preview bg-brown"></div>
                     <span id="predictionRange" class="prediction-range">5x-20x</span>
                 </div>
-                <div class="version-text">v:3.24</div>
+                <div class="version-text">v:3.28</div>
             </div>
-            
             <button id="btnRefresh" class="btn-common btn-refresh-main" onclick="refreshTower()">REFRESH</button>
         </div>
 
@@ -304,8 +299,8 @@
                     <img src="Mallet.png" alt="槌子圖標" class="hit-icon">
                 </div>
                 <div id="autoContent" style="display:none;">
-                    <div style="font-size: min(14px, 3.5vw); color: #ffcccb; letter-spacing: 1px;">AUTO</div>
-                    <div id="autoCountText" style="font-size: min(26px, 6vw); line-height: 1;">10</div>
+                    <div style="font-size: 14px; color: #ffcccb; letter-spacing: 1px;">AUTO</div>
+                    <div id="autoCountText" style="font-size: 26px; line-height: 1;">10</div>
                 </div>
             </button>
             <div class="bet-selector">
@@ -336,6 +331,21 @@
 </div>
 
 <script>
+    // === 🌟 核心：H5 遊戲級強制畫布縮放引擎 ===
+    function resizeGameApp() {
+        const app = document.getElementById('gameApp');
+        // 鎖定 420x740 為完美比例，根據螢幕大小無損等比縮放
+        const targetW = 420;
+        const targetH = 740; 
+        const scale = Math.min(window.innerWidth / targetW, window.innerHeight / targetH);
+        app.style.width = `${targetW}px`;
+        app.style.height = `${targetH}px`;
+        app.style.transform = `scale(${scale})`;
+    }
+    window.addEventListener('resize', resizeGameApp);
+    window.addEventListener('orientationchange', resizeGameApp);
+    resizeGameApp(); 
+
     const RTP_TARGET = 0.97;
     const BET_COST = 10.0;
     const FULL_CLEAR_PROB = 0.005;
@@ -347,7 +357,7 @@
         silver:{ name: '銀色',   class: 'bg-silver',min: 8.0, max: 12.0 },
         gold:  { name: '金色',   class: 'bg-gold',  min: 12.0, max: 30.0 }
     };
-    const FEVER_TRIGGER_PROB = 0.10;
+    const FEVER_TRIGGER_PROB = 0.005;
 
     let balance = 10250.0;
     let energyPoints = 10; 
